@@ -207,7 +207,7 @@ These apply to every phase, not a phase of their own. Traced via REQ-ATOMIC-01:
 | 2. Sirius Value Type | 0/1 | Not started | - |
 | 3. Function ID Enum | 0/1 | Not started | - |
 | 4. DuckDB→Sirius Translator | 1/1 | Complete    | 2026-05-21 |
-| 5. Dual-Path Executor | 0/1 | Not started | - |
+| 5. Dual-Path Executor | 1/1 | Complete    | 2026-05-26 |
 | 6. Per-Specialization Migration | 0/1 | Not started | - |
 | 7. Translator Flip | 0/1 | Not started | - |
 | 8. Wrapper Flip | 0/1 | Not started | - |

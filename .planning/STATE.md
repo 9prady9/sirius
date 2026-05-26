@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
+status: ready_to_plan
 stopped_at: Phase 5 plan 1 complete — 5 atomic commits on sirius_expression_framework
 last_updated: "2026-05-26T13:37:00Z"
 last_activity: 2026-05-26 -- Phase 5 plan 1 complete (5 commits a74864d2..2bbc37d3 superseded; new HEAD 2bbc37d3)
 progress:
   total_phases: 11
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 7
   completed_plans: 5
-  percent: 45
+  percent: 55
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-04-24)
 
 ## Current Position
 
-Phase: 5 (Dual-Path Executor) — COMPLETE
-Plan: 1 of 1 — DONE
+Phase: 6
+Plan: Not started
 Next phase: 6 — Per-Specialization Migration (#699) — ready to plan via `/gsd-discuss-phase 6`
-Status: Phase 5 complete; awaiting Phase 6 discussion
-Last activity: 2026-05-26 -- Phase 5 plan 1 complete; 5 atomic commits on sirius_expression_framework (HEAD: 2bbc37d3)
+Status: Ready to plan
+Last activity: 2026-05-26
 
 Progress: [█████░░░░░] 45% (5 of 11 phases)
 
@@ -59,7 +59,7 @@ All 11 sub-issues are OPEN, labeled `duckdb`, assigned to `@9prady9`, and linked
 
 **Velocity:**
 
-- Total plans completed: 7 (init scaffolding + 01-01 + 02-01 + 03-01 + 04-01 + 05-01)
+- Total plans completed: 8 (init scaffolding + 01-01 + 02-01 + 03-01 + 04-01 + 05-01)
 - Average duration: —
 - Total execution time: — (per-plan timing tracked from Phase 5; Phase 5 plan 1 = ~119 min)
 
