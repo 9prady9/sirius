@@ -27,7 +27,7 @@ This closes the last semantic coupling to DuckDB in Super Sirius operator evalua
 - [ ] **REQ-AST-02** Define `sirius::value` — a type-safe variant keyed on `sirius::type_id` — to replace `duckdb::Value` as the payload of `sirius::ast::constant`.
 - [ ] **REQ-AST-03** Define `sirius::function_id` as a closed enum covering the 27 scalar functions the GPU executor supports today (`add`, `sub`, `mul`, `div`, `int_div`, `mod`, `substring`, `like`, `not_like`, `contains`, `prefix`, `suffix`, `strlen`, `length`, `regexp_replace`, `year`, `month`, `day`, `hour`, `minute`, `second`, `millisecond`, `microsecond`, `date_trunc`, `row`, `struct_pack`, `error`), with bidirectional mapping helpers at the plan-builder boundary.
 - [x] **REQ-TRANS-01** Implement the DuckDB-side translator `sirius::ast::from_duckdb(duckdb::Expression const&)` — the sole point that consumes `duckdb::Bound*Expression` types and produces Sirius AST nodes (including unsupported-shape → fallback signalling). **Validated in Phase 4** (2026-05-21, 6 commits a74864d2 → 1648c252; [ast_from_duckdb] 36/36; full sirius_unittest 1326/1326).
-- [ ] **REQ-EXEC-01** Migrate `gpu_expression_executor::execute` + `count_ast_ops` + all 9 `gpu_execute_*.cpp` specializations to dispatch on `sirius::ast::node` via `std::visit` over the variant.
+- [ ] **REQ-EXEC-01** Migrate `gpu_expression_executor::execute` + `count_ast_ops` + all 9 `gpu_execute_*.cpp` specializations to dispatch on `sirius::ast::node` via `std::visit` over the variant. **Partial in Phase 5** (2026-05-26, 7 commits 7ca1c593 → 45174010; signatures + 11 round-trip shims via `sirius::ast::to_duckdb`; `[ast_to_duckdb]` 41/41; `[gpu_expression_executor_ast]` 20/20; full `sirius_unittest` 1,512/1,512). Per-specialization migration deferred to Phase 6 (#699).
 - [ ] **REQ-EXEC-02** Migrate `gpu_expression_translator` (DuckDB→cuDF-AST bridge) to consume `sirius::ast::node` instead of `duckdb::Expression`; plan builders call `ast::from_duckdb` first.
 - [ ] **REQ-EXEC-03** Replace the `duckdb::LogicalTypeId`-based `supported_ast_cast_types` allowlist with a `sirius::type_id`-based one.
 - [ ] **REQ-WRAP-01** Retire the Phase 7a PIMPL: either (a) redefine `sirius::expression` to hold a `std::unique_ptr<sirius::ast::node>`, or (b) remove the wrapper entirely and have operators hold the AST node directly. Decision deferred to the final migration phase.
@@ -114,4 +114,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-21 after Phase 4 (REQ-TRANS-01) validated*
+*Last updated: 2026-05-26 after Phase 5 (REQ-EXEC-01 partial — signatures + shims) landed*
