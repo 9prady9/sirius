@@ -14,7 +14,7 @@ Replace the Phase 7a `sirius::expression` PIMPL wrapper (around `duckdb::Express
 - [x] **Phase 2: Sirius Value Type** ([#695](https://github.com/sirius-db/sirius/issues/695)) — `sirius::value` variant + bidirectional `duckdb::Value` mappers. **Complete 2026-04-27** (4 atomic commits, full `sirius_unittest` + `[ast_value]` (27) + `[ast_scaffold]` (11) suites green).
 - [x] **Phase 3: Function ID Enum** ([#696](https://github.com/sirius-db/sirius/issues/696)) — Closed `sirius::function_id` + name mappers; delete `*_FUNC_STR` macros and `supported_ast_functions` allowlist. **Complete 2026-04-27** (merged upstream as `f24fcadf`, PR [#716](https://github.com/sirius-db/sirius/pull/716)).
 - [x] **Phase 4: DuckDB→Sirius Translator** ([#697](https://github.com/sirius-db/sirius/issues/697)) — `sirius::ast::from_duckdb(duckdb::Expression const&)` additive. (completed 2026-05-21)
-- [ ] **Phase 5: Dual-Path Executor** ([#698](https://github.com/sirius-db/sirius/issues/698)) — `gpu_expression_executor` gains Sirius-AST overloads alongside DuckDB-typed ones.
+- [x] **Phase 5: Dual-Path Executor** ([#698](https://github.com/sirius-db/sirius/issues/698)) — `gpu_expression_executor` gains Sirius-AST overloads alongside DuckDB-typed ones. (completed 2026-05-26 — 5 atomic commits 7ca1c593..2bbc37d3; full `sirius_unittest` 1,512/1,512 green)
 - [ ] **Phase 6: Per-Specialization Migration** ([#699](https://github.com/sirius-db/sirius/issues/699)) — Flip each of the 9 `gpu_execute_*.cpp` files to take `sirius::ast::<node>` (9 atomic commits).
 - [ ] **Phase 7: Translator Flip** ([#700](https://github.com/sirius-db/sirius/issues/700)) — `gpu_expression_translator` input type flips from `duckdb::Expression` to `sirius::ast::node`.
 - [ ] **Phase 8: Wrapper Flip** ([#701](https://github.com/sirius-db/sirius/issues/701)) — `sirius::expression` PIMPL rewires to hold `std::unique_ptr<sirius::ast::node>`; plan builders call `ast::from_duckdb` at the boundary.
@@ -95,7 +95,7 @@ Plans:
 **Plans**: 1 plan.
 
 Plans:
-- [ ] 05-01: Add dual overloads + shim layer + equivalence tests.
+- [x] 05-01-dual-path-executor-PLAN.md — Add to_duckdb translator + dual-path executor surface (header signatures + std::visit dispatcher + 11 per-alternative round-trip shims + _ast_expressions state) + three-leg byte-equivalence test (5 atomic commits + per-commit user-verify checkpoint). **Complete 2026-05-26** (5 commits 7ca1c593..2bbc37d3; full sirius_unittest 1,512/1,512; `[ast_to_duckdb]` 41/41; `[gpu_expression_executor_ast]` 20/20).
 
 ### Phase 6: Per-Specialization Migration
 **Goal**: Flip each of the 9 `gpu_execute_*.cpp` files to take `sirius::ast::<node>` as the primary parameter. The DuckDB-typed specialization methods stay as shims until Phase 9.
