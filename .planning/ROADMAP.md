@@ -15,7 +15,7 @@ Replace the Phase 7a `sirius::expression` PIMPL wrapper (around `duckdb::Express
 - [x] **Phase 3: Function ID Enum** ([#696](https://github.com/sirius-db/sirius/issues/696)) — Closed `sirius::function_id` + name mappers; delete `*_FUNC_STR` macros and `supported_ast_functions` allowlist. **Complete 2026-04-27** (merged upstream as `f24fcadf`, PR [#716](https://github.com/sirius-db/sirius/pull/716)).
 - [x] **Phase 4: DuckDB→Sirius Translator** ([#697](https://github.com/sirius-db/sirius/issues/697)) — `sirius::ast::from_duckdb(duckdb::Expression const&)` additive. (completed 2026-05-21)
 - [x] **Phase 5: Dual-Path Executor** ([#698](https://github.com/sirius-db/sirius/issues/698)) — `gpu_expression_executor` gains Sirius-AST overloads alongside DuckDB-typed ones. (completed 2026-05-26 — 5 atomic commits 7ca1c593..2bbc37d3; full `sirius_unittest` 1,512/1,512 green)
-- [ ] **Phase 6: Per-Specialization Migration** ([#699](https://github.com/sirius-db/sirius/issues/699)) — Flip each of the 9 `gpu_execute_*.cpp` files to take `sirius::ast::<node>` (9 atomic commits).
+- [x] **Phase 6: Per-Specialization Migration** ([#699](https://github.com/sirius-db/sirius/issues/699)) — Flip each of the 9 `gpu_execute_*.cpp` files to take `sirius::ast::<node>` (10 atomic commits — 9 specialization migrations + 1 native `count_ast_ops(node)` cleanup). **Complete 2026-05-29** (10 commits 25239af8..5034b150 on sirius_expression_framework; both build configs clean; runtime gate deferred per Rule 4 environmental waiver).
 - [ ] **Phase 7: Translator Flip** ([#700](https://github.com/sirius-db/sirius/issues/700)) — `gpu_expression_translator` input type flips from `duckdb::Expression` to `sirius::ast::node`.
 - [ ] **Phase 8: Wrapper Flip** ([#701](https://github.com/sirius-db/sirius/issues/701)) — `sirius::expression` PIMPL rewires to hold `std::unique_ptr<sirius::ast::node>`; plan builders call `ast::from_duckdb` at the boundary.
 - [ ] **Phase 9: Remove DuckDB-Typed Executor Overloads** ([#702](https://github.com/sirius-db/sirius/issues/702)) — Delete the legacy executor methods; migrate test bodies to build Sirius AST directly.
@@ -107,10 +107,10 @@ Plans:
   3. Each of the 9 commits is individually revertable; the full suite passes at every commit.
   4. Per-specialization tests in `test_gpu_expression_executor.cpp` now exercise the Sirius-AST path directly; DuckDB-path tests remain green via the shim.
   5. Full suites green on both builds at each commit.
-**Plans**: 1 plan with 9 atomic tasks (one per specialization), delivered as 9 commits or 9 PRs at author's discretion.
+**Plans**: 1 plan with 10 atomic tasks (9 per-specialization commits + 1 native `count_ast_ops(sirius::ast::node const&)` cleanup commit), delivered as 10 commits or up to 10 PRs at author's discretion.
 
 Plans:
-- [ ] 06-01: Migrate all 9 specializations in commit order `reference → constant → comparison → conjunction → between → operator → cast → function → case`. Each commit green on the full suite.
+- [x] 06-01-per-specialization-migration-PLAN.md — Migrate all 9 specializations in commit order `reference → constant → comparison → conjunction → between → operator → cast → function → case`, then replace `count_ast_ops(sirius::ast::node const&)` with native `std::visit` traversal in commit 10. Each commit independently green on both build configs (runtime gate deferred per Rule 4 environmental waiver; sandbox masks /dev/nvidia*). **Complete 2026-05-29** (10 commits 25239af8..5034b150).
 
 ### Phase 7: Translator Flip
 **Goal**: `gpu_expression_translator` input type flips from `duckdb::Expression const&` to `sirius::ast::node const&`. Plan builders call `ast::from_duckdb` at the boundary before invoking the translator.
@@ -208,7 +208,7 @@ These apply to every phase, not a phase of their own. Traced via REQ-ATOMIC-01:
 | 3. Function ID Enum | 0/1 | Not started | - |
 | 4. DuckDB→Sirius Translator | 1/1 | Complete    | 2026-05-21 |
 | 5. Dual-Path Executor | 1/1 | Complete    | 2026-05-26 |
-| 6. Per-Specialization Migration | 0/1 | Not started | - |
+| 6. Per-Specialization Migration | 1/1 | Complete    | 2026-05-29 |
 | 7. Translator Flip | 0/1 | Not started | - |
 | 8. Wrapper Flip | 0/1 | Not started | - |
 | 9. Remove DuckDB Overloads | 0/1 | Not started | - |
@@ -224,7 +224,7 @@ These apply to every phase, not a phase of their own. Traced via REQ-ATOMIC-01:
 | AST-03 | Phase 3 | Complete |
 | TRANS-01 | Phase 4 | Pending |
 | TEST-02 | Phase 4 | Pending |
-| EXEC-01 | Phase 5 + Phase 6 | Pending |
+| EXEC-01 | Phase 5 + Phase 6 | Complete |
 | EXEC-02 | Phase 7 | Pending |
 | WRAP-01 | Phase 8 + Phase 10 | Pending |
 | EXEC-03 | Phase 9 | Pending |

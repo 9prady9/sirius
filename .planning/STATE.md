@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready_to_plan
-stopped_at: Phase 5 plan 1 complete — 5 atomic commits on sirius_expression_framework
-last_updated: "2026-05-26T13:37:00Z"
-last_activity: 2026-05-26 -- Phase 5 plan 1 complete (5 commits a74864d2..2bbc37d3 superseded; new HEAD 2bbc37d3)
+status: executing
+stopped_at: Phase 6 plan 1 complete — 10 atomic commits on sirius_expression_framework
+last_updated: "2026-05-29T20:45:00Z"
+last_activity: 2026-05-29 -- Phase 06 execution complete
 progress:
   total_phases: 11
-  completed_phases: 6
+  completed_phases: 5
   total_plans: 7
-  completed_plans: 5
-  percent: 55
+  completed_plans: 6
+  percent: 45
 ---
 
 # Project State
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-24)
 
 **Core value:** Every PR lands green on `sirius_unittest` (incl. 76/76 expression-executor suite + 20/20 new gpu_expression_executor_ast suite). Legacy `gpu_processing` path (and `tpch-sirius.test`, which exercises it) is frozen — no Phase 7b commit touches `src/legacy/`.
-**Current focus:** Phase 6 — Per-Specialization Migration (#699) — next to plan
+**Current focus:** Phase 07 — translator-flip (next, awaiting `/gsd-discuss-phase 7`)
 
 ## Current Position
 
-Phase: 6
-Plan: Not started
-Next phase: 6 — Per-Specialization Migration (#699) — ready to plan via `/gsd-discuss-phase 6`
-Status: Ready to plan
-Last activity: 2026-05-26
+Phase: 06 (per-specialization-migration) — COMPLETE
+Plan: 1 of 1 complete
+Next phase: 7 — Translator Flip (#700) — ready to plan via `/gsd-discuss-phase 7`
+Status: Phase 06 complete; awaiting Phase 07 planning
+Last activity: 2026-05-29 -- Phase 06 execution complete
 
 Progress: [█████░░░░░] 45% (5 of 11 phases)
 
@@ -59,9 +59,9 @@ All 11 sub-issues are OPEN, labeled `duckdb`, assigned to `@9prady9`, and linked
 
 **Velocity:**
 
-- Total plans completed: 8 (init scaffolding + 01-01 + 02-01 + 03-01 + 04-01 + 05-01)
+- Total plans completed: 9 (init scaffolding + 01-01 + 02-01 + 03-01 + 04-01 + 05-01 + 06-01)
 - Average duration: —
-- Total execution time: — (per-plan timing tracked from Phase 5; Phase 5 plan 1 = ~119 min)
+- Total execution time: — (per-plan timing tracked from Phase 5; Phase 5 plan 1 = ~119 min; Phase 6 plan 1 = ~110 min)
 
 **By Phase:**
 
@@ -72,14 +72,16 @@ All 11 sub-issues are OPEN, labeled `duckdb`, assigned to `@9prady9`, and linked
 | 3. function_id enum | 1/1 | ✅ COMPLETE | PR #716 (sirius_function_id) — merged upstream as f24fcadf |
 | 4. ast::from_duckdb | 1/1 | ✅ COMPLETE | Merged upstream as 8231f095 (PR #796) on 2026-05-21 |
 | 5. dual-path executor | 1/1 | ✅ COMPLETE | 5 atomic commits 7ca1c593..2bbc37d3 on sirius_expression_framework |
-| 6. per-specialization migration | 0/? | ⏳ NEXT | awaiting `/gsd-discuss-phase 6` |
-| 7–11 | 0/? each | not yet planned | |
+| 6. per-specialization migration | 1/1 | ✅ COMPLETE | 10 atomic commits 25239af8..5034b150 on sirius_expression_framework (runtime gate deferred — sandbox masks /dev/nvidia*) |
+| 7. translator flip | 0/? | ⏳ NEXT | awaiting `/gsd-discuss-phase 7` |
+| 8–11 | 0/? each | not yet planned | |
 
 **Per-plan metrics:**
 
 | Phase | Plan | Duration | Tasks | Files | Notes |
 |-------|------|----------|-------|-------|-------|
 | 5 | 1 | ~119 min | 5 | 7 | 4 functional commits + 1 style commit; 41 + 20 new TEST_CASEs; full sirius_unittest 1512/1512 |
+| 6 | 1 | ~110 min | 10 | 11 | 10 feat commits (9 specialization migrations + 1 native count_ast_ops); 16 new [expression_executor_ast_native] TEST_CASEs; both build configs clean at every commit; runtime gate deferred per Rule 4 environmental waiver (sandbox masks /dev/nvidia*) |
 
 *Updated after each plan completion*
 
@@ -101,6 +103,9 @@ Logged in PROJECT.md Key Decisions table. Summary of choices made during initial
 - **Phase 5 (2026-05-26):** `function_call`'s `ScalarFunction` stub is name + empty arg-types + return_type + nullptr function pointer. `gpu_execute_function.cpp` dispatches by name → function_id, never reads ScalarFunction internals.
 - **Phase 5 (2026-05-26):** `select(table_view)` AST branch round-trips through `to_duckdb` to recover return_type for the BOOLEAN debug-only D_ASSERT — matches DuckDB-branch parity with minimum semantic delta.
 - **Phase 5 (2026-05-26):** `duckdb::unique_ptr<T>` ≠ `std::unique_ptr<T>` — they share `std::default_delete` but are not implicitly convertible. `to_duckdb.cpp` carries two anonymous-namespace adapters (`to_duck_ptr`, `from_duck_derived_ptr`) that release+wrap at the DuckDB ctor boundary. Pattern reusable for any future Sirius surface that returns `std::unique_ptr<duckdb::Expression>` but internally calls DuckDB ctors.
+- **Phase 6 (2026-05-29):** Per-specialization native AST migration shape — each `gpu_execute_*.cpp` carries a primary `execute(sirius::ast::<alt> const&)` body plus a two-line `from_duckdb` shim for the DuckDB-typed entry. AST-op gate values are computed locally per-specialization to match the canonical `count_ast_ops(duckdb::Expression)` contract exactly; the native `count_ast_ops(node)` overload (commit 06-10) does the same computation via `std::visit`, so the two converge.
+- **Phase 6 (2026-05-29):** Comparison/conjunction/between MATERIALIZE-via-binary-op fallbacks use `cudf::data_type{cudf::type_id::BOOL8}` directly instead of `GetCudfType(expr.return_type)` — the corresponding `sirius::ast::*` nodes carry no `logical_type` field and the result is always BOOLEAN. The cast specialization keeps a small file-local Sirius-typed allowlist (`std::array<sirius::type_id, 3>` covering UBIGINT/BIGINT/DOUBLE) so the native body never calls `sirius::to_duckdb` for the supported-type check.
+- **Phase 6 (2026-05-29):** in_list constant-haystack optimization is duplicated as `_ast`-suffixed helpers (`execute_numeric_in_ast<T>`, `execute_decimal_in_ast<DecimalT>`, `execute_timestamp_in_ast<CudfTimestampT>`, `execute_string_in_ast`, `execute_bool_in_ast`) reading `sirius::ast::constant.payload` via `std::get<T>`. BOOL8 needs a dedicated helper because `std::vector<bool>` has no `.data()` — the variant holds `bool` but the helper uploads as `uint8_t` for cuDF BOOL8 storage. Pattern carries forward to any future cuDF type whose AST node and storage representations diverge.
 
 ### Pending Todos
 
@@ -122,34 +127,37 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-26T13:37:00Z
-Stopped at: Phase 5 plan 1 complete — 5 atomic commits on sirius_expression_framework
+Last session: 2026-05-29T20:45:00Z
+Stopped at: Phase 6 plan 1 complete — 10 atomic commits on sirius_expression_framework
 Resume file: None
 
-**Last commits (Phase 5, on `sirius_expression_framework`):**
+**Last commits (Phase 6, on `sirius_expression_framework`):**
 
-- 2bbc37d3 — style(05-01): apply pre-commit hook fixups
-- 930dccdc — test(05-01): three-leg ast equivalence test for dual-path executor
-- 332aec16 — feat(05-01): implement per-alternative round-trip shims via to_duckdb
-- 556b3b6f — feat(05-01): scaffold dual-path gpu_expression_executor surface
-- 7ca1c593 — feat(05-01): add sirius::ast::to_duckdb translator and direct-ctor tests
+- 5034b150 — feat(06-10): native count_ast_ops(sirius::ast::node const&) traversal (#699)
+- 79f6443d — feat(06-09): migrate case specialization to native Sirius AST (#699)
+- a38969ec — feat(06-08): migrate function specialization to native Sirius AST (#699)
+- 54c04338 — feat(06-07): migrate cast specialization to native Sirius AST (#699)
+- c0881c72 — feat(06-06): migrate operator specialization to native Sirius AST (#699)
+- 4215dcdc — feat(06-05): migrate between specialization to native Sirius AST (#699)
+- 90acbf69 — feat(06-04): migrate conjunction specialization to native Sirius AST (#699)
+- cb0177e5 — feat(06-03): migrate comparison specialization to native Sirius AST (#699)
+- ddd30d0b — feat(06-02): migrate constant specialization to native Sirius AST (#699)
+- 25239af8 — feat(06-01): migrate reference specialization to native Sirius AST (#699)
 
-**Verification (2026-05-26):**
+**Verification (2026-05-29):**
 
-- Build: clean, no warnings
-- `[ast_to_duckdb]` (new): 134 assertions / 41 cases — PASS
-- `[gpu_expression_executor_ast]` (new): 84 assertions / 20 cases — PASS
-- `[expression_executor]`: 3,255 assertions / 76 cases — PASS (grew from 70 unrelated to Phase 5)
-- `[expression_translator]`: 169 assertions / 54 cases — PASS
-- `[ast_from_duckdb]` (Phase 4 regression gate): 139 assertions / 36 cases — PASS
-- `[ast_function_id]` (Phase 3 regression gate): 88 assertions / 31 cases — PASS
-- `[ast_value]` (Phase 2 regression gate): 84 assertions / 27 cases — PASS
-- `[ast_scaffold]` (Phase 1 regression gate): 50 assertions / 16 cases — PASS
-- Full `sirius_unittest`: 41,431,375 assertions / 1,512 cases — PASS
-- Pre-commit: all hooks clean post style commit (clang-format, codespell, cmake-format).
-- `src/legacy/` and `test/sql/tpch-sirius.test`: byte-unchanged (legacy-frozen invariant honored).
-- `tpch-sirius.test` (SQLLogicTest): SKIPPED — exercises legacy `gpu_processing` path which Phase 7b never touches (per `feedback_legacy_sirius_frozen.md`).
+- Build (default, `ENABLE_LEGACY_SIRIUS=OFF`): clean at every commit.
+- Build (`make legacy-release`, `ENABLE_LEGACY_SIRIUS=ON`): clean at every commit.
+- Source-string `grep -q` assertions for every task's `<verify><automated>` block: PASS (all 10 tasks).
+- Pre-commit hooks (clang-format, codespell, cmake-format, EOF fixer, etc.): clean on every commit; clang-format reflows folded into the same `feat(06-NN)` commit.
+- 16 new `[expression_executor_ast_native]` TEST_CASEs added in `test_gpu_expression_executor.cpp` (compile-time only — runtime gate deferred).
+- `src/include/expression_executor/gpu_expression_executor.hpp`: byte-unchanged across the phase (`git diff a6e701d6..HEAD` empty).
+- `src/expression/to_duckdb.cpp`, `src/include/expression/ast/to_duckdb.hpp`: byte-unchanged across the phase.
+- `src/legacy/`, `test/sql/tpch-sirius.test`: byte-unchanged (legacy-frozen invariant honored).
+- No tracked code comment references planning artifacts (D-codes, "Phase 6", `.planning/*`, gsd-*) — `grep -rnE` clean.
 
-**Next Phase:** 6 (Per-Specialization Migration — #699) — awaiting `/gsd-discuss-phase 6`
+**Runtime gate deferred — Rule 4 Environmental waiver:** Sandbox masks `/dev/nvidia*` device nodes, so `sirius_unittest` cannot boot on this host (cucascade::topology_discovery reports 0 GPUs). User explicitly waived the per-commit runtime gate for this run and will run `sirius_unittest` after disabling the sandbox. The substitute gate (both build configs + source-string assertions + pre-commit hooks) ran on every commit.
 
-**Recommended Phase 6 starting point:** `gpu_execute_reference.cpp` — the leaf with no recursive children; the shim becomes "rewrite to call existing `execute(BoundReferenceExpression, mode)` with the Sirius `reference.column_index` field directly" rather than translate-then-traverse.
+**Next Phase:** 7 (Translator Flip — #700) — awaiting `/gsd-discuss-phase 7`
+
+**Recommended Phase 7 starting point:** `gpu_expression_translator::translate_expression` and `add_expression` overloads. The per-specialization dispatch surface is now Sirius-AST-native (Phase 6); Phase 7 can lean on the same `std::visit` pattern that `count_ast_ops(sirius::ast::node const&)` and the public `execute(sirius::ast::node const&, mode)` dispatcher use. Plan builders in `src/planner/` need to call `ast::from_duckdb` at the boundary before invoking the translator. Phase 5's `[gpu_expression_executor_ast]` equivalence suite gives Phase 7 a built-in regression gate while the translator flip is in flight.
